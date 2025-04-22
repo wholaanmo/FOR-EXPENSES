@@ -72,15 +72,11 @@
             </tbody>
           </table>
         </div>
-         <!-- <ul>
-           <li v-for="expense in expenses" :key="expense.id">
-            {{ expense.item_name }} - ₱{{ expense.item_price.toFixed(2) }}
-           </li>
-         </ul> -->
+
        </div>
      </div>
      <div class="total">
-       Total: ₱{{ (totalAmount * 50).toFixed(2) }} (≈ ${{ totalAmount.toFixed(2) }})
+      Total: <strong>₱{{ totalAmount.toFixed(2) }}</strong> (≈ {{ formatUsd(convertPhpToUsd(totalAmount)) }} USD)
      </div>
     </header>
  </template>
@@ -103,15 +99,49 @@
        personalBudgetId: null, //TEMPORARYYYYYYYYYYYYYYYYYY
        action: 'add',
        hideMessage: false,
-       successTimeout: null
+       successTimeout: null,
+       usdExchangeRate: 56.50
      };
    },
    computed: {
-     totalAmount() {
-      return this.expenses?.reduce((sum, expense) => sum + (expense.item_price || 0), 0) || 0; //NEWWWWWWWWWWWWWWWWWWWW
-     }
-   },
-   methods: {
+    totalAmount() {
+      return this.expenses?.reduce((sum, expense) => 
+        sum + this.parseCurrency(expense.item_price), 0) || 0;
+    },
+    totalInUsd() {
+      return (this.totalAmount / this.usdExchangeRate).toFixed(2);
+    }
+  },
+  async mounted() {
+    try {
+      const response = await axios.get('https://api.exchangerate-api.com/v4/latest/USD');
+      this.usdExchangeRate = response.data.rates.PHP;
+      await this.fetchExpenses();
+    } catch (error) {
+      console.error("Initialization error:", error);
+      await this.fetchExpenses().catch(e => console.error("Expense fetch failed:", e));
+    }
+  },
+  methods: {
+    parseCurrency(value) {
+      if (!value) return 0;
+      const numericValue = String(value).replace(/[^\d.]/g, '');
+      return parseFloat(numericValue) || 0;
+    },
+    convertPhpToUsd(phpAmount) {
+      return this.parseCurrency(phpAmount) / this.usdExchangeRate; // Use dynamic rate
+    },
+    formatUsd(value) {
+      return '$' + parseFloat(value).toFixed(2);
+    },
+    formatPHP(value) {
+      const amount = this.parseCurrency(value);
+      return '₱' + amount.toLocaleString('en-PH', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    },
+
   showSuccessMessage(message) {
     // Clear any existing timeout
     if (this.successTimeout) {
@@ -161,7 +191,7 @@
        
        if (this.editId) {
          // Edit existing expense
-         axios.put('/api/expenses', { ...expenseData, id: this.editId }, config)
+         axios.put(`/api/expenses/${this.editId}`, expenseData, config)
          .then(() => {
            this.showSuccessMessage('Expense updated successfully!');
            this.fetchExpenses();
