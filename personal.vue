@@ -3,13 +3,38 @@
  
    <header class="container">
      <div class="content-wrapper">
+
+      <div class="budget-section"> <!--NEWWWWW-->
+  <h3>Monthly Budget</h3>
+  <div class="form-group">
+    <label for="monthYear">Month-Year:</label>
+    <select id="monthYear" v-model="selectedMonthYear">
+      <option v-for="month in availableMonths" :key="month" :value="month">
+        {{ formatMonthYear(month) }}
+      </option>
+    </select>
+  </div>
+  <div class="form-group">
+    <label for="budgetAmount">Budget Amount (₱):</label>
+    <input 
+      type="number" 
+      id="budgetAmount" 
+      v-model="budgetAmount" 
+      placeholder="Enter budget amount" 
+      step="0.01"
+      min="0"
+    >
+  </div>
+  <button class="btn1" @click="handleBudgetSubmit">
+    {{ budgetEditId ? 'Update Budget' : 'Set Budget' }}
+  </button>
+</div> <!--NEWWWWW-->
  
        <form @submit.prevent="handleSubmit" class="expense-form"> <!-- CLASS IS NEWWWWWWWWWWW-->
          <input type="hidden" v-model="action" />
          <input type="hidden" v-if="editId" v-model="editId" />
 
 
-           <!-- CLASS IS NEWWWWWWWWWWW-->
          <div class="form-group">
            <label>EXPENSE TYPE:</label>
            <select v-model="expenseType" required @change="checkExpenseType">
@@ -40,7 +65,7 @@
          </div>
  
          <button class="btn" type="submit">{{ editId ? 'Save Changes' : 'Add Expense' }}</button>
-        <!--<button class="btn1" type="submit">{{ editId ? 'Save Changes' : 'Add Budget' }}</button> -->
+
        
       </form>
       <div v-if="successMessage" ref="successMessage" class="success-message" :class="{ hide: hideMessage }"> {{ successMessage }} </div>
@@ -63,8 +88,10 @@
                 <td>{{ expense.expense_type }}</td>
                 <td>{{ expense.item_name }}</td>
                 <td>₱{{ expense.item_price.toFixed(2) }}</td>
-                <td>{{ formatDate(expense.created_at) }}</td>
+                <td>{{ formatDate(expense.expense_date) }}</td>
                 <td class="actions">
+                  <td v-if="getBudgetForExpense(expense)"> {{ formatPHP(getBudgetForExpense(expense).budget_amount) }} </td> <!--NEWWW-->
+                  <td v-else>Not set</td> <!--NEWWWWW-->
                   <button @click="editExpense(expense)" class="edit-btn">Edit</button>
                   <button @click="deleteExpense(expense.id)" class="delete-btn">Delete</button>
                 </td>
