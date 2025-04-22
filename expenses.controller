@@ -6,6 +6,13 @@ module.exports = {
     const { item_price, expense_type, item_name, personal_budget_id } = req.body;
     const userId = req.user.userId; // From JWT middleware
 
+    if (!item_price || !expense_type || !item_name) {
+      return res.status(400).json({
+          success: 0,
+          message: "Missing required fields"
+      });
+  }
+
     expenseService.addExpense(
       { userId, item_price, expense_type, item_name, personal_budget_id},
       (err, results) => {
@@ -30,8 +37,9 @@ module.exports = {
   },
 
   editExpense: (req, res) => {
-    const { id, item_price, expense_type, item_name } = req.body;
+    const { item_price, expense_type, item_name } = req.body;
     const userId = req.user.userId;
+    const id = req.params.id; 
 
     expenseService.editExpense(
       { id, userId, item_price, expense_type, item_name },
