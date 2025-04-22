@@ -3,12 +3,13 @@
  
    <header class="container">
      <div class="content-wrapper">
-       <div v-if="successMessage" class="success-message">{{ successMessage }}</div>
  
-       <form @submit.prevent="handleSubmit">
+       <form @submit.prevent="handleSubmit" class="expense-form"> <!-- CLASS IS NEWWWWWWWWWWW-->
          <input type="hidden" v-model="action" />
          <input type="hidden" v-if="editId" v-model="editId" />
- 
+
+
+           <!-- CLASS IS NEWWWWWWWWWWW-->
          <div class="form-group">
            <label>EXPENSE TYPE:</label>
            <select v-model="expenseType" required @change="checkExpenseType">
@@ -40,15 +41,42 @@
  
          <button class="btn" type="submit">{{ editId ? 'Save Changes' : 'Add Expense' }}</button>
         <!--<button class="btn1" type="submit">{{ editId ? 'Save Changes' : 'Add Budget' }}</button> -->
-       </form>
- 
-       <div>
-         <div class="h3">Your Expenses</div>
-         <ul>
+       
+      </form>
+      <div v-if="successMessage" ref="successMessage" class="success-message" :class="{ hide: hideMessage }"> {{ successMessage }} </div>
+
+       <div class="expenses-section"> <!-- NEWWWWWWWWWWW-->
+        <h3>Your Expenses</h3> <!-- NEWWWWWWWWWWW-->
+         <div class="expenses-table"> <!-- NEWWWWWWWWWWW-->
+          <table>
+            <thead>
+              <tr>
+                <th>Expense Type</th>
+                <th>Item Name</th>
+                <th>Item Price</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="expense in expenses" :key="expense.id">
+                <td>{{ expense.expense_type }}</td>
+                <td>{{ expense.item_name }}</td>
+                <td>₱{{ expense.item_price.toFixed(2) }}</td>
+                <td>{{ formatDate(expense.created_at) }}</td>
+                <td class="actions">
+                  <button @click="editExpense(expense)" class="edit-btn">Edit</button>
+                  <button @click="deleteExpense(expense.id)" class="delete-btn">Delete</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+         <!-- <ul>
            <li v-for="expense in expenses" :key="expense.id">
             {{ expense.item_name }} - ₱{{ expense.item_price.toFixed(2) }}
            </li>
-         </ul>
+         </ul> -->
        </div>
      </div>
      <div class="total">
@@ -73,7 +101,9 @@
        editId: null,
        expenses: [],
        personalBudgetId: null, //TEMPORARYYYYYYYYYYYYYYYYYY
-       action: 'add'
+       action: 'add',
+       hideMessage: false,
+       successTimeout: null
      };
    },
    computed: {
@@ -82,6 +112,27 @@
      }
    },
    methods: {
+  showSuccessMessage(message) {
+    // Clear any existing timeout
+    if (this.successTimeout) {
+      clearTimeout(this.successTimeout);
+    }
+    
+    // Reset hide state and set message
+    this.hideMessage = false;
+    this.successMessage = message;
+    
+    // Set timeout to hide after 2.5s
+    this.successTimeout = setTimeout(() => {
+      this.hideMessage = true;
+      
+      // Clear message after fade out completes
+      setTimeout(() => {
+        this.successMessage = '';
+      }, 500);
+    }, 2500);
+  },
+
      fetchExpenses() {
        axios.get('/api/expenses', {
          headers: { Authorization: `Bearer ${localStorage.getItem('jsontoken')}` }
@@ -92,7 +143,7 @@
        .catch(error => {
         console.error("Error fetching expenses:", error);
         this.expenses = []; // Reset to empty array on error
-        this.successMessage = 'Failed to load expenses. Please try again.';
+        this.showSuccessMessage('Failed to load expenses. Please try again.');
         });
     },
      handleSubmit() {
@@ -112,13 +163,13 @@
          // Edit existing expense
          axios.put('/api/expenses', { ...expenseData, id: this.editId }, config)
          .then(() => {
-           this.successMessage = 'Expense updated successfully!';
+           this.showSuccessMessage('Expense updated successfully!');
            this.fetchExpenses();
            this.resetForm();
          })
          .catch(error => {
            console.error("Error updating expense:", error);
-           this.successMessage = 'Failed to update expense.';
+           this.showSuccessMessage('Failed to update expense.'); 
          });
        } else {
 
@@ -127,20 +178,27 @@
       .then(response => {
         console.log('Full response:', response); //NEWWWWWWWWWWWWWWW
         if (response.data.success === 1) {
-          this.successMessage = 'Expense added successfully!';
+          this.showSuccessMessage('Expense added successfully!');
           this.fetchExpenses();
           this.resetForm();
         } else {
-          this.successMessage = 'Failed to add expense: ' + (response.data.message || 'Unknown error');
+          this.showSuccessMessage('Failed to add expense: ' + (response.data.message || 'Unknown error'));
         }
       })
       .catch(error => {
         console.error("Full error:", error.response); // Add this
-        this.successMessage = 'Failed to add expense: ' + 
-            (error.response?.data?.message || error.message || 'Unknown error');
+        this.showSuccessMessage('Failed to add expense: ' + 
+          (error.response?.data?.message || error.message || 'Unknown error')); 
     });
   }
 },
+
+formatDate(dateString) {
+      if (!dateString) return 'N/A';
+      const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+      return new Date(dateString).toLocaleDateString('en-US', options);
+    }, // FOR TABLE (NEWWWWWWWWWWWWWWWWW)
+
      editExpense(expense) {
        this.editId = expense.id;
        this.expenseType = expense.expense_type;
@@ -153,7 +211,7 @@
            headers: { Authorization: `Bearer ${localStorage.getItem('jsontoken')}` }
          })
          .then(() => {
-           this.successMessage = 'Expense deleted successfully!';
+           this.showSuccessMessage('Expense deleted successfully!');
            this.fetchExpenses();
          });
        }
@@ -216,42 +274,185 @@
  }
  
  .success-message {
-     color: black;
-     padding: 10px;
-     margin-bottom: 20px;
-     border-radius: 5px;
-     text-align: center;
- }
- 
- table {
-     width: 75%;
-     border-collapse: collapse;
-     margin-top: 20px;
- }
- 
- table, th, td {
-     border: 1px solid black;
-     padding: 7px;
-     text-align: left;
-     color: black;
- }
- 
- th {
-     background-color: rgba(255, 255, 255, 0.15);
-     color: black;
- }
-
- .h3{
-  font-size: 24px;
-  font-weight: bold;
-  margin-top: 30px;
   color: black;
- }
+  padding: 10px;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  text-align: center;
+  background-color: #dff0d8;
+  border: 1px solid #d6e9c6;
+  opacity: 1;
+  transition: opacity 0.5s ease-out;
+  position: relative;
+  z-index: 100;
+}
+
+.success-message.hide {
+  opacity: 0;
+  height: 0;
+  padding: 0;
+  margin: 0;
+  border: none;
+  overflow: hidden;
+  transition: opacity 0.5s ease-out, height 0.5s 0.5s, padding 0.5s 0.5s, margin 0.5s 0.5s;
+} /* NEWWWWWWWWWWWWWWWWWWWWWWWWWW*/ 
+
+ .expense-form {
+  margin-bottom: 30px;
+}  /*NEWWWWWWWWWWWWWWWWWWWWW*/
  
- .total {
+
+.expenses-section {
+  margin-top: 10px; /* Added top margin */
+}
+
+.expenses-section h3 {
+  margin-top: 10px;
+  margin-bottom: 25px; /* Increased from 15px */
+  color: #333;
+  font-size: 1.5rem; /* Larger font */
+  padding-bottom: 10px;
+  border-bottom: 2px solid #eee; /* Added separator */
+} /*NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW*/
+
+.expenses-table {
+  overflow-x: auto;
+  margin: 30px 0; /* Added vertical spacing */
+}  /*NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW*/
+
+table {
+  width: 100%;
+  border-collapse: separate; /* Changed from collapse */
+  border-spacing: 0 10px; /* Space between rows */
+  margin-bottom: 30px; /* Increased from 20px */
+}  /*NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW*/
+
+th, td {
+  padding: 6px 20px; /* Increased padding */
+  text-align: center;
+  border-bottom: 2px solid #ddd; /* Thicker border */
+  color: #333;
+} /*NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW*/
+
+th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  font-size: 1rem; /* Larger header text */
+  padding: 12px 20px; /* More padding for headers */
+} /*NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW*/
+
+tr {
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* Subtle shadow */
+  margin-bottom: 15px; /* Space between rows */
+}
+
+tr:hover {
+  background-color: #f5f5f5;
+  transform: translateY(-2px); /* Lift effect */
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1); /* Stronger shadow on hover */
+  transition: all 0.2s ease; /* Smooth transition */
+} /*NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW*/
+
+.actions {
+  display: flex;
+  gap: 10px;
+} /*NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW*/
+
+.edit-btn, .delete-btn {
+  padding: 8px 15px;
+  font-size: 0.9rem;
+  border-radius: 4px;
+  cursor: pointer;
+  border: none;
+  color: white;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Edit Button Specific Styles */
+.edit-btn {
+  background-color: #2196F3;
+}
+
+/* Delete Button Specific Styles */
+.delete-btn {
+  background-color: #f44336;
+}
+
+/* Hover Effects */
+.edit-btn:hover {
+  background-color: #1976D2;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(33, 150, 243, 0.3);
+  
+  /* Ripple Effect */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+  }
+  
+  &:hover::after {
+    animation: ripple 0.6s ease-out;
+  }
+}
+
+.delete-btn:hover {
+  background-color: #d32f2f;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(244, 67, 54, 0.3);
+  
+  /* Pulse Effect */
+  animation: pulse 0.5s ease-in-out;
+}
+
+/* Ripple Animation */
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(20, 20);
+    opacity: 0;
+  }
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+  0% {
+    transform: translateY(-2px) scale(1);
+  }
+  50% {
+    transform: translateY(-2px) scale(1.05);
+  }
+  100% {
+    transform: translateY(-2px) scale(1);
+  }
+}
+
+/* Active State */
+.edit-btn:active, .delete-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+} /*NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW*/
+
+.total {
      font-size: 20px;
      font-weight: bold;
-     color: red;
+     color: #333;
      padding: 20px;
      background-color: white;
      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
@@ -259,9 +460,9 @@
      width: 1100px;
      position: relative; /* Keeps it visible at the bottom */
      bottom: 0; /* Stick to the bottom */
+     
+}/*NEWWWWWWWWWWWWWWWWWWWWW */
 
- 
- }
  
  .form-group {
      margin-bottom: 20px;
