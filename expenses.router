@@ -4,7 +4,7 @@ const expenseController = require('./expenses.controller');
 const { checkToken } = require('../../auth/token_validation');
 
 router.post('/', checkToken, expenseController.addExpense);
-router.patch('/', checkToken, expenseController.editExpense);
+router.put('/:id', checkToken, expenseController.editExpense);
 router.delete('/:id', checkToken, expenseController.deleteExpense);
 router.get('/', checkToken, expenseController.getExpenses);
 
