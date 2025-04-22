@@ -1,0 +1,64 @@
+const pool = require('../../config/database');
+
+module.exports = {
+  // Add Expense
+  addExpense: (data, callback) => {
+    pool.query(
+      "INSERT INTO expenses (userId, item_price, expense_type, item_name, personal_budget_id) VALUES (?, ?, ?, ?, ?)",
+      [data.userId, data.item_price, data.expense_type, data.item_name, data.personal_budget_id],
+      (err, results) => {
+        if (err) {
+          console.error("SQL Error:", err.sqlMessage);  //DEBUGGGGGGGGGGGGGGGGGGGGGGGGGGG
+        console.error("Database Error:", err);
+        return callback(err);
+      }
+        return callback(null, results);
+      }
+    );
+  },
+
+  // Edit Expense
+  editExpense: (data, callback) => {
+    pool.query(
+      "UPDATE expenses SET item_price = ?, expense_type = ?, item_name = ? WHERE id = ? AND userId = ?",
+      [data.item_price, data.expense_type, data.item_name, data.id, data.userId],
+      (err, results) => {
+        if (err) {
+          console.error("SQL Error:", err.sqlMessage); // DEBUGGGGGGGGGGGGGGGGGGGGGGGGGGGG
+          return callback(err);
+        }
+        if (results.affectedRows === 0) {
+          return callback(new Error("Expense not found or unauthorized"));
+        }
+        return callback(null, results);
+      }
+    );
+  },
+
+  // Delete Expense
+  deleteExpense: (id, userId, callback) => {
+    pool.query(
+      "DELETE FROM expenses WHERE id = ? AND userId = ?",
+      [id, userId],
+      (err, results) => {
+        if (err) return callback(err);
+        if (results.affectedRows === 0) {
+          return callback(new Error("Expense not found or unauthorized"));
+        }
+        return callback(null, results);
+      }
+    );
+  },
+
+  // Get All Expenses for a User
+  getExpensesByUser: (userId, callback) => {
+    pool.query(
+      "SELECT id, item_price, expense_type, item_name FROM expenses WHERE userId= ?",
+      [userId],
+      (err, results) => {
+        if (err) return callback(err);
+        return callback(null, results);
+      }
+    );
+  }
+};
