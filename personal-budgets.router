@@ -1,0 +1,12 @@
+const express = require('express');
+const router = express.Router();
+const personal_budgetController = require('./personal-budgets.controller');
+const { checkToken } = require('../../auth/token_validation');
+
+router.post('/', checkToken, (req, res, next) => {
+    console.log("Reached personal budgets POST route");
+    next();
+  }, personal_budgetController.addBudget); // TEMPORARYYYYYYYYY
+router.get('/', checkToken, personal_budgetController.getBudgets);
+
+module.exports = router;
