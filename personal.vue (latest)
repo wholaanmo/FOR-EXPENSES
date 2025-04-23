@@ -1,6 +1,7 @@
 <template>
   <navigation/>
   <div class="main-layout">
+    <div class="top-row"> <!-- NEWWWWWWWWWWWWWWWWWW-->
   <div class="budget-container">
     <div class="budget-content">
       <h3>Monthly Budget</h3>
@@ -31,7 +32,7 @@
     </div>
   </div>
 
-  <header class="container">
+  <!--ADDING EXPENSESSSS-->
     <div class="content-wrapper">
       <form @submit.prevent="handleSubmit" class="expense-form"> <!-- CLASS IS NEWWWWWWWWWWW-->
          <input type="hidden" v-model="action" />
@@ -73,6 +74,11 @@
 
       <div v-if="successMessage" ref="successMessage" class="success-message" :class="{ hide: hideMessage }"> {{ successMessage }} </div>
 
+      </div>
+      </div>
+
+      <!--YOUR EXPENSESSSSS-->
+      <div class="expenses-container">
       <div class="expenses-section"> <!-- NEWWWWWWWWWWW-->
         <h3>Your Expenses</h3> <!-- NEWWWWWWWWWWW-->
          <div class="expenses-table"> <!-- NEWWWWWWWWWWW-->
@@ -92,13 +98,17 @@
                 <td>{{ expense.item_name }}</td>
                 <td>₱{{ expense.item_price.toFixed(2) }}</td>
                 <td>{{ formatDate(expense.expense_date) }}</td>
-                <td class="actions">
-                  <td v-if="getBudgetForExpense(expense)"> {{ formatPHP(getBudgetForExpense(expense).budget_amount) }} </td> <!--NEWWW-->
-                  <td v-else>Not set</td> <!--NEWWWWW-->
+                <td>
+                  <span v-if="getBudgetForExpense(expense)">
+                    {{ formatPHP(getBudgetForExpense(expense).budget_amount) }}
+                  </span>
+                  <span v-else>Not set</span>
+                  </td> <!--NEWWWWW-->
+                  <td class="actions">
                   <button @click="editExpense(expense)" class="edit-btn">Edit</button>
                   <button @click="deleteExpense(expense.id)" class="delete-btn">Delete</button>
                 </td>
-              </tr>
+                </tr>
             </tbody>
           </table>
         </div>
@@ -108,7 +118,6 @@
       Total: <strong>₱{{ totalAmount.toFixed(2) }}</strong> (≈ {{ formatUsd(convertPhpToUsd(totalAmount)) }} USD)
      </div>
     </div>
-    </header>
   </div>
  </template>
  
@@ -410,15 +419,22 @@ formatDate(dateString) {
 
 .main-layout {
   display: flex;
+  flex-direction: column;
   width: 100%;
   gap: 20px;
   padding: 20px;
   box-sizing: border-box;
-} /*NEWWWWWWWW*/
+}/*NEWWWWWWWW*/
+
+.top-row {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+} /*NEWWWWWWWWWWWWWWWWWWWW*/
 
 /* Budget Container Styles */
 .budget-container {
-  width: 25%;
+  width: 30%;
   background-color: #7ec492;
   padding: 20px;
   border-radius: 15px;
@@ -449,12 +465,12 @@ formatDate(dateString) {
   width: 100%;
 }
 
- .container {
+ /*.container {
     background-color: #9dd7af;
     max-width: 1000px;
     max-height: 75vh;
     width: 75%;
-    margin: 20px auto 20px auto; /* Top, auto-sides, bottom */
+    margin: 20px auto 20px auto; 
     border-radius: 20px;
     display: flex;
     flex-direction: column;
@@ -465,20 +481,27 @@ formatDate(dateString) {
     justify-content: flex-start;
     padding-top: 20px;
     z-index: 1;
-    position: relative; /* important: NOT absolute */
+    position: relative; 
     box-sizing: border-box;
-}
+} TEMPORARYYYYYYYY NA WALAAAAAAA*/ 
 
  
  .content-wrapper {
-     width: 100%; /* Ensures the form takes the full width */
-     overflow-y: visible;
-     display: flex;
-     flex-wrap: wrap;
-     flex-direction: column;
-     margin-top: 30px;
-     align-items: center; /* Centers form inputs */
- }
+  width: 70%;
+  background-color: #9dd7af;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  height: fit-content;
+}
+
+.expenses-container {
+  width: 100%;
+  background-color: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
  
  .success-message {
   color: black;
@@ -505,7 +528,7 @@ formatDate(dateString) {
 } /* NEWWWWWWWWWWWWWWWWWWWWWWWWWW*/ 
 
  .expense-form {
-  margin-bottom: 30px;
+  width: 100%; 
 }  /*NEWWWWWWWWWWWWWWWWWWWWW*/
  
 
@@ -564,6 +587,7 @@ tr:hover {
 .actions {
   display: flex;
   gap: 10px;
+  justify-content: center;
 } /*NEWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW*/
 
 .edit-btn, .delete-btn {
