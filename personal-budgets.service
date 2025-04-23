@@ -1,0 +1,55 @@
+const pool = require('../../config/database');
+
+module.exports = {
+  addBudget: (data, callback) => {
+    pool.query(
+      `INSERT INTO personal_budgets 
+       (user_id, month_year, budget_amount) 
+       VALUES (?, ?, ?)`,
+      [data.userId, data.month_year, data.budget_amount],
+      (err, results) => {
+        if (err) return callback(err);
+        return callback(null, results);
+      }
+    );
+  },
+
+  updateBudget: (data, callback) => {
+    pool.query(
+      `UPDATE personal_budgets 
+       SET budget_amount = ? 
+       WHERE user_id = ? AND month_year = ?`,
+      [data.budget_amount, data.userId, data.month_year],
+      (err, results) => {
+        if (err) return callback(err);
+        return callback(null, results);
+      }
+    );
+  },
+
+  checkBudgetExists: (userId, month_year, callback) => {
+    pool.query(
+      `SELECT id FROM personal_budgets 
+       WHERE user_id = ? AND month_year = ?`,
+      [userId, month_year],
+      (err, results) => {
+        if (err) return callback(err);
+        return callback(null, results.length > 0);
+      }
+    );
+  },
+
+  getBudgetsByUser: (userId, callback) => {
+    pool.query(
+      `SELECT id, month_year, budget_amount 
+       FROM personal_budgets 
+       WHERE user_id = ? 
+       ORDER BY month_year DESC`,
+      [userId],
+      (err, results) => {
+        if (err) return callback(err);
+        return callback(null, results);
+      }
+    );
+  }
+};
